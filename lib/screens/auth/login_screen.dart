@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:geziyorum/services/auth_service.dart'; // AuthService'i import et
 import 'package:geziyorum/main.dart'; // AppColors için (veya colors.dart gibi ayrı bir dosyanız varsa oradan)
 import 'package:geziyorum/screens/auth/register_screen.dart'; // RegisterScreen'e geçiş için
+import 'package:geziyorum/screens/auth/forgot_password_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Font Awesome için bu satırı etkinleştirin
 
 class LoginScreen extends StatefulWidget {
@@ -173,15 +174,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      // Şifre sıfırlama ekranına yönlendirme
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Şifre sıfırlama özelliği yakında!')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
+                        ),
                       );
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen()));
                     },
                     child: const Text(
                       'Şifremi unuttum?',
-                      style: TextStyle(color: AppColors.primaryColor, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
