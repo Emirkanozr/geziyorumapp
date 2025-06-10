@@ -8,6 +8,7 @@ import 'package:geziyorum/models/comment.dart';
 import 'package:geziyorum/services/comment_service.dart';
 import 'package:url_launcher/url_launcher.dart'; // URL açmak için
 import 'package:uuid/uuid.dart'; // Benzersiz ID'ler için uuid paketi
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PlaceDetailScreen extends StatefulWidget {
   final Place place;
@@ -38,9 +39,6 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
   final PageController _pageController = PageController();
   int _currentImageIndex = 0; // Şu anki gösterilen resmin indeksi
 
-  // Sabit Kullanıcı ID'si (Gerçek uygulamada kimlik doğrulama ile gelmeli)
-  // TODO: Authentication eklendiğinde bu ID dinamikleştirilmeli
-  static const String _currentUserId = 'mock_user_1';
 
   @override
   void initState() {
@@ -135,8 +133,11 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
 
   // Kullanıcının bu mekana daha önce yorum yapıp yapmadığını kontrol etme
   Future<void> _checkUserCommentStatus() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
     try {
-      final bool commented = await _commentService.hasUserCommentedForPlace(_currentUserId, widget.place.id);
+      final bool commented =
+          await _commentService.hasUserCommentedForPlace(currentUser.uid, widget.place.id);
       if (mounted) {
         setState(() {
           _userHasCommented = commented;
@@ -163,11 +164,19 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
       return;
     }
 
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Yorum eklemek için giriş yapmalısınız.')),
+      );
+      return;
+    }
+
     final newComment = Comment(
       id: _uuid.v4(), // Benzersiz ID oluştur
       placeId: widget.place.id,
-      userId: _currentUserId, // Mevcut kullanıcı ID'sini kullan
-      userName: 'Gezi Sever', // TODO: Oturum açmış kullanıcının gerçek adı olmalı
+      userId: currentUser.uid,
+      userName: currentUser.displayName ?? 'Anonim',
       rating: _currentRating,
       text: _commentController.text,
       timestamp: DateTime.now(),
