@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "298519641212",
+    "project_id": "geziyorumapp-fc74c",
+    "storage_bucket": "geziyorumapp-fc74c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298519641212:android:40386a816707a03ae69df9",
+        "android_client_info": {
+          "package_name": "com.example.geziyorum"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "298519641212-c91fam2ceddd6q0had34a4udvqk42bc2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.geziyorum",
+            "certificate_hash": "9b3353652dc224e6359d0205ba46baa480699764"
+          }
+        },
+        {
+          "client_id": "298519641212-30blhjegu0qrqbvcjlluk69n5om7h85t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFYKnJ5Q2H6AtajCZHCX_zNwhLp--X45U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "298519641212-30blhjegu0qrqbvcjlluk69n5om7h85t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "298519641212-tpmrakl1bbbab9k8f4f3t5h6d3u92ghq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.geziyorum"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
