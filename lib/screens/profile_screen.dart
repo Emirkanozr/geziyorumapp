@@ -9,6 +9,9 @@ import 'package:geziyorum/main.dart'; // AppColors için
 import 'package:geziyorum/screens/profile/edit_profile_screen.dart';
 import 'package:geziyorum/screens/profile/settings_screen.dart';
 import 'dart:async'; // StreamSubscription için
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _currentUser;
   Map<String, dynamic>? _firestoreUserData;
   bool _isLoadingUserData = true;
+  bool _isUploadingPhoto = false; // Profil fotoğrafı yükleme durumu
   StreamSubscription<User?>? _authStateSubscription; // authStateChanges için subscription
   StreamSubscription<Map<String, dynamic>?>? _userDataSubscription; // Firestore stream için subscription
 
@@ -170,6 +174,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Profil fotoğrafını seçip Firebase Storage'a yükleyen ve kullanıcı verilerini güncelleyen yardımcı metot
+  Future<void> _changeProfilePhoto() async {
+    if (_currentUser == null || _isUploadingPhoto) return;
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    setState(() {
+      _isUploadingPhoto = true;
+    });
+
+    try {
+      final File imageFile = File(pickedFile.path);
+      final String fileExtension = pickedFile.path.split('.').last;
+
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('${_currentUser!.uid}.$fileExtension');
+
+      await storageRef.putFile(imageFile);
+      final String downloadUrl = await storageRef.getDownloadURL();
+
+      await _currentUser!.updatePhotoURL(downloadUrl);
+      await _currentUser!.reload();
+      _currentUser = FirebaseAuth.instance.currentUser;
+
+      final userDataService = Provider.of<UserDataService>(context, listen: false);
+      await userDataService.updateUserData(_currentUser!.uid, {'photoURL': downloadUrl});
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fotoğraf güncellenirken hata oluştu: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingPhoto = false;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _authStateSubscription?.cancel(); // Dinleyiciyi iptal et
@@ -271,21 +326,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Profil fotoğrafı değiştirme işlevi buraya eklenecek
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profil fotoğrafı değiştirme özelliği yakında!')),
-                        );
-                      },
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: AppColors.accentColor,
-                        backgroundImage: _currentUser?.photoURL != null
-                            ? NetworkImage(_currentUser!.photoURL!)
-                            : null,
-                        child: _currentUser?.photoURL == null
-                            ? const Icon(Icons.person, size: 70, color: AppColors.white)
-                            : null,
+                      onTap: _changeProfilePhoto,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: AppColors.accentColor,
+                            backgroundImage: _currentUser?.photoURL != null
+                                ? NetworkImage(_currentUser!.photoURL!)
+                                : null,
+                            child: _currentUser?.photoURL == null
+                                ? const Icon(Icons.person, size: 70, color: AppColors.white)
+                                : null,
+                          ),
+                          if (_isUploadingPhoto)
+                            const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.white)),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
